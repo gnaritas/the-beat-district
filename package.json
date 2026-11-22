@@ -1,0 +1,9 @@
+{
+  "name": "the-beat-district-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The Beat District — record store, Petersburg VA. Template v2 T1 (2026-11-21, t_36b96016).",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}

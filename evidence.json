@@ -1,0 +1,165 @@
+{
+ "slug": "the-beat-district",
+ "built": "2026-11-21",
+ "card": "t_36b96016",
+ "identity": [
+  {
+   "fact": "shop",
+   "value": "The Beat District — music/record store (GBP category 'Music store')",
+   "src": [
+    "GBP Maps read 2026-11-21",
+    "IG @thebeatdistrict_pva bio 'Indie music store · Selling NEW and USED vinyl and cds'",
+    "press 12onyourside 2026-11-02 'is a record store'"
+   ]
+  },
+  {
+   "fact": "address",
+   "value": "22 N Sycamore St Ste A, Petersburg, VA 23803",
+   "src": [
+    "GBP (primary)",
+    "IG bio '22 N Sycamore St., Petersburg, VA'",
+    "own site home HTML contains 'Sycamore' + '23803'"
+   ]
+  },
+  {
+   "fact": "address_conflict",
+   "value": "press article says 135 Union Street — outlier vs GBP+IG+site; GBP/IG chosen (owner-published, mutually corroborating). 135 Union likely press error or superseded plan.",
+   "src": [
+    "https://www.12onyourside.com/2026/11/02/birddogs-bridal-boutiques-sick-beats-heres-whats-new-rva-november/"
+   ]
+  },
+  {
+   "fact": "phone",
+   "value": "(804) 504-2325",
+   "src": [
+    "GBP"
+   ]
+  },
+  {
+   "fact": "email",
+   "value": "info@thebeatdistrict.co (site-published, 2 hits in home HTML)",
+   "src": [
+    "own site raw HTML (pitch recipient too)"
+   ]
+  },
+  {
+   "fact": "hours",
+   "value": "Wed–Sun 12–6",
+   "src": [
+    "IG bio 'Wed-Sun 12-6pm'",
+    "GBP 'Closed · Opens 12 PM' at 01:30 ET Sun corroborates 12:00 open"
+   ]
+  },
+  {
+   "fact": "owner",
+   "value": "Demetrius Frazier; also runs Resist Booksellers just down the street; hand-picks the vinyl (fresh indie releases → best sellers, audiophile-grade pressings, local artist records, vintage staples)",
+   "src": [
+    "press 12onyourside 2026-11-02"
+   ]
+  },
+  {
+   "fact": "attributes",
+   "value": "Identifies as Black-owned; LGBTQ+ friendly",
+   "src": [
+    "GBP attributes"
+   ]
+  },
+  {
+   "fact": "opened",
+   "value": "grand opening fall 2026 (IG opening post 2026-09-19 'Grand Opening ... almost here'; press lists it among November 2026 new businesses)",
+   "src": [
+    "IG post Dde-aHGj_2V",
+    "press"
+   ]
+  },
+  {
+   "fact": "geo",
+   "value": "37.2284303, -77.4039837",
+   "src": [
+    "OSM Nominatim geocode '22, North Sycamore Street, Blandford, Petersburg, Virginia, 23803'"
+   ]
+  },
+  {
+   "fact": "social",
+   "value": "@thebeatdistrict_pva (960 followers). NOT @thebeatdistrict — that handle is a music producer (homonym).",
+   "src": [
+    "IG profile reads"
+   ]
+  },
+  {
+   "fact": "platform",
+   "value": "storefront runs on Broadtime ('Platform by Broadtime' in footer; img.broadtime.com assets; CloudFront origin)",
+   "src": [
+    "own site home HTML"
+   ]
+  }
+ ],
+ "site_copy_used": [
+  {
+   "fact": "mission",
+   "value": "og:description verbatim on home quote band",
+   "src": [
+    "own site"
+   ]
+  },
+  {
+   "fact": "stock note",
+   "value": "'In Stock' online = quick order fulfillment generally 2–3 business days; online prices/stock differ from retail store",
+   "src": [
+    "own site home 'Note about online prices & stock'"
+   ]
+  },
+  {
+   "fact": "pickup",
+   "value": "Free local pickup in Petersburg",
+   "src": [
+    "own site top bar + banner"
+   ]
+  },
+  {
+   "fact": "genres",
+   "value": "Blues & Jazz, R&B/Soul, Rock & Pop, World Music, Rap & Hip-Hop, Reggae, Dance & Electronic",
+   "src": [
+    "own site menu"
+   ]
+  },
+  {
+   "fact": "collections",
+   "value": "Pre-Orders/Coming Soon with release date+label+pressing color; Indie Exclusives; Recent Online Restocks; Music Top Sellers; New Music Friday; Movies; RSD Black Friday 2026; Rhino Rocktober 2026; anniversary editions",
+   "src": [
+    "own site nav/collections/product tiles"
+   ]
+  },
+  {
+   "fact": "gift categories",
+   "value": "Baby/Kids, Wellness, Clothing, Candles+Incense, Housewares, Bath+Body, Novelties, Books, Toys+Games, Music Accessories, Candy",
+   "src": [
+    "own site 'Shop Gifts' menu"
+   ]
+  }
+ ],
+ "omitted_by_design": [
+  "events calendar",
+  "prices/priceRange",
+  "trade-in/we-buy",
+  "staff roster",
+  "Richmond-area geography",
+  "PlayARt app feature",
+  "135 Union St address (press outlier)",
+  "GBP review count (not readable in limited Maps view)"
+ ],
+ "sibling_domains": {
+  "thebeatdistrict.com": "114-byte parked lander (JS redirect to /lander) — no content; not a competing site",
+  "note": "own-site banner text mentions 'thebeatdistrict.com' prices line — boilerplate from platform template"
+ },
+ "mining_correction": {
+  "claimed": "MOBILE BROKEN: whole desktop layout zoomed-out on phone",
+  "verified_2026-11-21": "live Chrome 390px emulation: visualViewport=390, scale=1, doc scrollWidth=390 (no panning); genuine responsive reflow. Real defects: dated mid-2010s theme, 8–13px mobile type, product-card clipping, cookie banner overlay on desktop, blank lower-half/no visible footer in capture, carousel arrow mismatch.",
+  "impact": "pitch frame uses truthful dated-template + small-mobile-type angle, not 'broken mobile'"
+ },
+ "geocode": {
+  "lat": 37.2284303,
+  "lon": -77.4039837,
+  "src": "nominatim.openstreetmap.org search 2026-11-21"
+ }
+}
