@@ -1,12 +1,12 @@
 #!/bin/bash
-# send_pitch.sh — guarded evolution pitch send for the-beat-district (t_36b96016)
+# send_pitch.sh — guarded evolution pitch send for the-beat-district E2 (t_36b96016)
+# Ports pz-painting proven kit tip e8fc692 2026-11-22. Recipient tz America/New_York (Petersburg VA).
 # Gates: registry dedupe guard -> live-preview gate -> word/shape/pixel assert -> recipient-window gate -> send -> IMAP read-back -> registry append + recount.
 # NEVER re-run after a confirmed send (guard exits ALREADY_SENT). NEVER blind-resend: msg_id recovered from IMAP if envelope JSON fails.
-# Recipient tz = Eastern (Petersburg VA) — window gate uses America/New_York.
 set -uo pipefail
 cd "$(dirname "$0")"
 DEMO=https://the-beat-district-demo.up.railway.app
-RECIPIENT="info@thebeatdistrict.co"     # site-published, 2 hits in home HTML (evidence.json)
+RECIPIENT="info@thebeatdistrict.co"     # site-published mailto (verified, evidence.json)
 SLUG=$(grep -oE 'https://[a-z0-9-]+-demo\.up\.railway\.app' pitch-draft.md | head -1 | sed -E 's|https://([a-z0-9-]+)-demo\..*|\1|')
 TOKEN=$(python3 -c "import re;d=open('pitch-draft.md').read();m=re.search(r'utm_content=([A-Za-z0-9-]+)',d);print(m.group(1))")
 echo "slug=$SLUG token=$TOKEN"
@@ -27,9 +27,9 @@ print(n)")
 [ "$GUARD" = "0" ] || { echo "ALREADY_SENT (registry pitch rows: $GUARD)"; exit 0; }
 
 echo "== live preview gate"
-HOME_CODE=$(curl -s -o /tmp/beat_home.html -w "%{http_code}" -m 15 "$DEMO/")
-grep -qi "The Beat District" /tmp/beat_home.html || HOME_CODE=BADBODY
-grep -qi "noindex" /tmp/beat_home.html || HOME_CODE=NOIDXMISSING
+HOME_CODE=$(curl -s -o /tmp/tbd_home.html -w "%{http_code}" -m 15 "$DEMO/")
+grep -qi "The Beat District" /tmp/tbd_home.html || HOME_CODE=BADBODY
+grep -qi "noindex" /tmp/tbd_home.html || HOME_CODE=NOIDXMISSING
 PIX_HDR=$(curl -s -m 15 -o /dev/null -w "%{http_code} %{content_type}" -I "$DEMO/open?t=${SLUG}-t9")
 echo "home=$HOME_CODE open=$PIX_HDR"
 [ "$HOME_CODE" = "200" ] || { echo "PREVIEW_NOT_LIVE"; exit 3; }
@@ -68,7 +68,21 @@ if errs:
 print(f"ASSERT PASS: core_words={wc} links=2 pixel-gates=ok")
 PYEOF
 
-echo "== recipient-window gate (Eastern = recipient tz; 07:00-17:00)"
+echo "== reply check (never pitch into an owner reply — INBOX FROM recipient domain)"
+python3 - <<'PYEOF' || exit 7
+import imaplib, re, sys
+conf={}
+for line in open("/Users/rleon/.hermes/config/jarvis-email.conf"):
+    m=re.match(r'\s*([A-Z_]+)\s*=\s*"?([^"\s]+)"?', line)
+    if m: conf[m.group(1)]=m.group(2)
+M=imaplib.IMAP4_SSL(conf["IMAP_SERVER"]); M.login(conf["EMAIL"],conf["APP_PASSWORD"]); M.select('INBOX')
+typ,res=M.uid('search',None,'FROM','thebeatdistrict.co')
+uids=[i.decode() for i in res[0].split()] if res and res[0] else []
+print("INBOX FROM thebeatdistrict.co uids:", uids)
+sys.exit(2 if uids else 0)
+PYEOF
+
+echo "== recipient-window gate (America/New_York = recipient tz (Petersburg VA); 07:00-17:00)"
 HR=$(TZ=America/New_York date +%H)
 [ "$HR" -ge 7 ] && [ "$HR" -lt 17 ] || { echo "OUTSIDE_WINDOW hr=$HR — do NOT send; re-park"; exit 4; }
 
@@ -82,6 +96,7 @@ try:
     d=json.load(open('send-envelope.json'))
 except Exception as e:
     print(''); raise SystemExit
+# dig message_id wherever it lives
 import re
 s=json.dumps(d)
 m=re.search(r'[\"'']message_id[\"'']:\s*[\"'']([^\"'']+)[\"'']', s)
@@ -123,7 +138,8 @@ norm=lambda s: "\n".join(l.rstrip() for l in s.replace("\r\n","\n").strip().spli
 mid=msg['Message-ID'] or ''
 rt=msg['Reply-To'] or ''
 ok_sentcopy = norm(plain)==norm(draft)
-ogf = ('Feedback-ID: websites:pitch' in (msg.as_string() or '')) or ('Feedback-ID: websites:pitch' in str(msg.get('References','')))
+ogf = ('Feedback-ID: websites:pitch' in (msg.as_string() or '')) or ('Feedback-ID: websites:pitch' in str(msg.get('References',''))) 
+# Feedback-ID may ride its own header; check raw
 if not ogf:
     ogf = 'Feedback-ID: websites:pitch' in (msg.get_all('Feedback-ID') and msg['Feedback-ID'] or '')
 match_claim = (msg_id_claim=='__NONE__') or (mid.strip('<>').lower()==msg_id_claim.strip('<>').lower())
@@ -133,6 +149,7 @@ print(mid)
 PYEOF
 RB=$?
 [ $RB -eq 0 ] || { echo "READBACK_PROBLEM exit=$RB — do NOT re-send; investigate"; exit 5; }
+# capture true mid from last line of readback: re-run cheap by parsing file? simpler: use MSGID unless __NONE__, else re-derive:
 if [ "$MSGID" = "__NONE__" ]; then
   MSGID=$(python3 - <<'PYEOF'
 import imaplib, re
@@ -157,29 +174,61 @@ PYEOF
 )
 fi
 
-echo "== registry append + recount"
+python3 - <<'PYEOF' || true
+import datetime, json
+today = datetime.date.today()
+fu = (today + datetime.timedelta(days=10)).isoformat()
+sw = ("render-sweep: 18/18 PASS 2026-11-21/22 (9 pages x 2 viewports; DOM metrics clean; "
+      "vision: gemini-2.5-flash OpenRouter battery 5 calls 2026-11-23 — 46 claims adjudicated "
+      "against live DOM measurements, 0 real, 0 fixes). Live: https://the-beat-district-demo.up.railway.app "
+      "(Railway shell project honeyspell-cafe, service 8d350110; teardown = serviceDelete, never project delete). "
+      "Before-shots: projects/websites/evolutions/shots-2026-11-21/thebeatdistrict_co-*.")
+try:
+    with open("DEPLOY.md") as f: dep = f.read()
+    if "render-sweep" not in dep:
+        with open("DEPLOY.md", "a") as f: f.write("\n" + sw + "\n")
+        print("DEPLOY_MD: sweep line appended")
+    else:
+        print("DEPLOY_MD: sweep line already banked")
+except FileNotFoundError:
+    print("DEPLOY_MD: missing")
+REG = "/Users/rleon/.hermes/projects/websites/pitch_registry.jsonl"
+rows = [json.loads(l) for l in open(REG) if l.strip()]
+def t1_done(r): return (r.get("msg_id") or "").strip() not in ("", "__NONE__")
+existing = {r.get("slug") for r in rows if r.get("type") in ("t2", "t3")}
+t1 = [r for r in rows if r.get("type") == "pitch" and t1_done(r) and r.get("slug") not in existing]
+print("t1 skip (unanswered):", ", ".join(sorted(r.get("slug", "?") for r in t1 if str(r.get("followup_due", "")) > fu)) or "none")
+for kind, due_s in (("t2", fu), ("t3", None)):
+    due = due_s or (datetime.date.fromisoformat(fu) + datetime.timedelta(days=7)).isoformat()
+    hits = [r.get("slug", "?") for r in t1 if r.get("followup_due") == due]
+    print(kind, "candidates (due", due + "):", ", ".join(sorted(set(hits))) or "none")
+PYEOF
+
+echo "== registry append + recount (jsonl + lane.db events mirror)"
 python3 - "$MSGID" <<'PYEOF'
-import json, sys, datetime, os
+import json, sys, datetime, time, sqlite3
 msg_id=sys.argv[1]
 REG="/Users/rleon/.hermes/projects/websites/pitch_registry.jsonl"
-def plus5bd(d):
-    hol={datetime.date(2026,11,26), datetime.date(2026,12,25)}  # Thanksgiving, Christmas
-    n=0
-    while n<5:
-        d+=datetime.timedelta(days=1)
-        if d.weekday()>=5 or d in hol: continue
-        n+=1
-    return d
+LANEDB="/Users/rleon/.hermes/projects/websites/lane.db"
+today=datetime.date.today()
+fu=(today+datetime.timedelta(days=10)).isoformat()
 row={"id": None, "slug": "the-beat-district", "type": "pitch", "feed_id": "exp-evolutions",
-     "aliases": ["thebeatdistrict.co", "thebeatdistrict.com", "The Beat District", "info@thebeatdistrict.co"],
+     "shop_id": "thebeatdistrict.co",
+     "aliases": ["thebeatdistrict.co","The Beat District","info@thebeatdistrict.co"],
+     "business": "The Beat District (Petersburg VA)",
      "email": "info@thebeatdistrict.co",
      "subject": "Your new website is live \u2014 The Beat District",
      "subject_arm": "v6", "cohort": "evolutions",
+     "preview": "https://the-beat-district-demo.up.railway.app",
+     "card": "t_36b96016",
      "utm_content": "the-beat-district-t1",
      "pixel": True, "shot": False,
-     "followup_due": plus5bd(datetime.date.today()).isoformat(),
+     "date": today.isoformat(),
+     "followup_due": fu,
+     "ladder": "t2 "+fu+" / t3 t2+7d / t4 t2+14d (weekday ladder, US-holiday shift); teardown recheck >= t2+20d",
      "ts": datetime.datetime.now().astimezone().isoformat(timespec="seconds"),
-     "msg_id": msg_id}
+     "msg_id": msg_id,
+     "note": "E2 evolutions rebuild pitch (junk-confirmed dated 2010s Wix template with tiny phone type per 11-21 vision pass; live recheck found responsive viewport — copy says dated/hard-to-read, never broken); phone-friendly demo; founder bundle $249+$39/mo 31d trial; read-back SENTCOPY_MATCH proof via send_pitch.sh"}
 import uuid
 row["id"]="pk-"+uuid.uuid4().hex[:12]
 with open(REG,"r") as f: existing=[json.loads(l) for l in f if l.strip()]
@@ -190,6 +239,18 @@ with open(REG,"a") as f: f.write(json.dumps(row, ensure_ascii=False)+"\n")
 after=[json.loads(l) for l in open(REG) if l.strip()]
 n=sum(1 for r in after if r.get("slug")=="the-beat-district" and r.get("type")=="pitch")
 print("RECONCILE: pitch rows for slug:", n, "| registry total rows:", len(after))
+# lane.db events mirror row (canonical store per DATA RULE 2026-11-21)
+db=sqlite3.connect(LANEDB)
+have=db.execute("SELECT COUNT(*) FROM events WHERE type='pitch' AND slug='the-beat-district'").fetchone()[0]
+if have:
+    print("EVENTS_GUARD_RACE: events pitch row already present"); sys.exit(1)
+line=db.execute("SELECT COALESCE(MAX(line),0)+1 FROM events").fetchone()[0]
+db.execute("INSERT INTO events (line,type,feed_id,shop_id,slug,business,email,msg_id,followup_due,date_txt,ts,note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+  (line,"pitch","exp-evolutions","thebeatdistrict.co","the-beat-district","The Beat District (Petersburg VA)","info@thebeatdistrict.co",msg_id,fu,today.isoformat(),int(time.time()),
+   "E2 evolutions rebuild pitch; junk-confirmed dated 2010s template, phone-unfriendly type; demo https://the-beat-district-demo.up.railway.app; founder bundle $249+$39/mo 31d trial; v6 subject arm"))
+db.commit()
+npitch=db.execute("SELECT COUNT(*) FROM events WHERE type='pitch'").fetchone()[0]
+print("EVENT_ROW_OK line=", line, "| events pitch total:", npitch)
 print("SENT_OK msg_id="+msg_id)
 PYEOF
 [ $? -eq 0 ] || exit 6

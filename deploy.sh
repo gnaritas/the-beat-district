@@ -6,16 +6,37 @@ set -uo pipefail
 cd /Users/rleon/sites/the-beat-district
 DEMO=https://the-beat-district-demo.up.railway.app
 
-echo "== 1. railway up (project create attempt)"
-UP_OUT=$(railway up -y -w "Ramon Leon's Projects" 2>&1 | tail -25)
+echo "== 0. link dir to honeyspell-cafe shell project (58-project cap house pattern, E1 t_811cd84b / terra-house etc)"
+python3 - <<'CFGEOF'
+import json
+CFG="/Users/rleon/.railway/config.json"
+c=json.load(open(CFG))
+key="/Users/rleon/sites/the-beat-district"
+c["projects"].setdefault(key, {
+    "environment": "f96cf84f-dc58-422f-af76-fa6d5e9e79e1",
+    "environmentName": "production",
+    "name": "honeyspell-cafe",
+    "project": "5be9a2cb-4597-48ed-9368-e8fb587aa71b",
+    "projectPath": key,
+    "service": None,
+})
+json.dump(c, open(CFG, "w"))
+print("linked:", key, "-> honeyspell-cafe 5be9a2cb")
+CFGEOF
+
+echo "== 1. service create + deploy inside shell"
+ADD_OUT=$(railway add -s the-beat-district </dev/null 2>&1 | tail -8)
+echo "$ADD_OUT"
+if echo "$ADD_OUT" | grep -qi "project limit"; then echo "SLOT_FULL"; exit 2; fi
+UP_OUT=$(railway up -d -y -s the-beat-district -e production </dev/null 2>&1 | tail -12)
 echo "$UP_OUT"
 if echo "$UP_OUT" | grep -qi "project limit"; then echo "SLOT_FULL"; exit 2; fi
 
 echo "== 2. domain"
-DOM=$(railway domain list --json 2>/dev/null || true)
+DOM=$(railway domain list --json -s the-beat-district 2>/dev/null || true)
 if [ -z "$DOM" ] || [ "$DOM" = "[]" ] || [ "$DOM" = "null" ]; then
-  DOM=$(railway domain 2>&1); echo "$DOM" | head -3
-  DOM=$(railway domain list --json 2>/dev/null)
+  DOM=$(railway domain -s the-beat-district </dev/null 2>&1); echo "$DOM" | head -3
+  DOM=$(railway domain list --json -s the-beat-district 2>/dev/null)
 fi
 echo "$DOM" | python3 -c "import sys,json;d=json.load(sys.stdin);[print(x.get('id'),x.get('domain') or x.get('hostname') or x.get('url')) for x in (d if isinstance(d,list) else d.get('domains',[]))]"
 CUR=$(echo "$DOM" | python3 -c "
@@ -32,10 +53,10 @@ if [ -n "$CUR" ]; then
 fi
 
 echo "== 3. brevo variable"
-awk '/xkeysib/{i=index($0,"xkeysib");print substr($0,i)}' /Users/rleon/.hermes/secrets/brevo_smtp_key.txt | railway variable set BREVO_API_KEY --stdin 2>&1 | tail -2
+awk '/xkeysib/{i=index($0,"xkeysib");print substr($0,i)}' /Users/rleon/.hermes/secrets/brevo_smtp_key.txt | railway variable set BREVO_API_KEY --stdin -s the-beat-district -e production 2>&1 | tail -2
 
 echo "== 4. redeploy with vars"
-railway up -d -y 2>&1 | tail -3
+railway up -d -y -s the-beat-district -e production </dev/null 2>&1 | tail -3
 
 echo "== 5. wait for live"
 for i in $(seq 1 30); do
@@ -54,7 +75,7 @@ def get(p, method="GET", data=None):
     cmd=["curl","-s","-m","25","-X",method,"-w","\n%{http_code}"]
     if data: cmd+=["--data",data]
     cmd.append(DEMO+p)
-    r=subprocess.run(cmd,capture_output=True,text=True)
+    r=subprocess.run(cmd,capture_output=True,text=True,errors="ignore")
     body,code=r.stdout.rsplit("\n",1)
     return int(code),body
 routes=["/","/records-and-gifts","/visit","/preorders","/contact","/privacy","/thanks","/sitemap.xml","/robots.txt","/favicon.svg","/style.css","/pixel.gif","/og.png","/nope"]
